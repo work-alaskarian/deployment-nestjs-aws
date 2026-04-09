@@ -12,31 +12,29 @@ ZIP_FILE="temp/${SERVICE_NAME}.zip"
 # Clean
 rm -rf dist build temp
 
+# Generate Prisma client (if using Prisma)
+if [ -f "prisma/schema.prisma" ]; then
+  echo "Generating Prisma client..."
+  npx prisma generate
+fi
+
 # Build TypeScript
 echo "Compiling TypeScript..."
 npx tsc -p tsconfig.build.json
 
-# Create build directory
+# Create build directory (app code only, no node_modules)
 mkdir -p build
 cp -r dist/* build/
-cp lambda.js build/
 cp package.json package-lock.json build/
 
-# Install production dependencies (for Lambda without layers)
-cd build
-npm ci --only=production --no-package-lock
-
-# Aggressive cleanup to reduce size
-rm -rf node_modules/**/*.md
-rm -rf node_modules/**/*.test.js
-rm -rf node_modules/**/*.spec.js
-rm -rf node_modules/**/README*
-rm -rf node_modules/**/LICENSE*
-rm -rf node_modules/**/CHANGELOG*
-rm -rf node_modules/**/docs
-rm -rf node_modules/**/examples
-find node_modules -name "*.map" -delete 2>/dev/null || true
-cd ..
+# Copy generated Prisma client (needed for enums) - only if Prisma is used
+if [ -d "node_modules/@prisma/client" ]; then
+  mkdir -p build/node_modules/@prisma
+  # Copy the base Prisma client package with runtime first
+  cp -r node_modules/@prisma/client build/node_modules/@prisma/
+  # Then copy generated files (index.js, etc.) from .prisma/client
+  cp -r node_modules/.prisma/client/* build/node_modules/@prisma/client/
+fi
 
 # Create ZIP with max compression
 mkdir -p temp
