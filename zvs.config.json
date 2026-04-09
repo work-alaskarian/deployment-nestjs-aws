@@ -1,0 +1,46 @@
+{
+  "$schema": "./deployment/schema.json",
+  "service": "your-service-name",
+  "aws": {
+    "region": "eu-central-1",
+    "s3Bucket": "zonevast-zappa-deployments-eu-central-1"
+  },
+  "lambda": {
+    "runtime": "nodejs18.x",
+    "handler": "dist/lambda.handler",
+    "memorySize": 512,
+    "timeout": 30,
+    "layers": [],
+    "apiPrefix": "/api/v1"
+  },
+  "apiGateway": {
+    "enabled": false,
+    "stageName": "dev",
+    "description": "API Gateway for your-service-name"
+  },
+  "environments": {
+    "dev": {
+      "functionName": "your-service-dev",
+      "roleArn": "arn:aws:iam::874688205874:role/zonevast-microservices-dev-ZappaLambdaExecutionRole",
+      "memorySize": 512,
+      "timeout": 30,
+      "configFile": "deployment/config/dev.json",
+      "apiGateway": {
+        "enabled": false,
+        "stageName": "dev"
+      }
+    },
+    "prod": {
+      "extends": "dev",
+      "functionName": "your-service-prod",
+      "roleArn": "arn:aws:iam::874688205874:role/zonevast-microservices-prod-ZappaLambdaExecutionRole",
+      "memorySize": 1024,
+      "timeout": 60,
+      "configFile": "deployment/config/prod.json",
+      "apiGateway": {
+        "enabled": true,
+        "stageName": "prod"
+      }
+    }
+  }
+}

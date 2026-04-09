@@ -1,0 +1,130 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ZoneVast Service Deployment Configuration",
+  "description": "Configuration schema for deploying Node.js/NestJS services to AWS Lambda",
+  "type": "object",
+  "required": ["service", "aws", "lambda", "environments"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema reference"
+    },
+    "service": {
+      "type": "string",
+      "description": "Service name (used for Lambda function naming and ZIP files)"
+    },
+    "aws": {
+      "type": "object",
+      "description": "AWS configuration",
+      "required": ["region"],
+      "properties": {
+        "region": {
+          "type": "string",
+          "description": "AWS region for deployment",
+          "examples": ["eu-central-1", "me-south-1", "us-east-1"]
+        },
+        "s3Bucket": {
+          "type": "string",
+          "description": "S3 bucket for deployment packages (optional, for larger packages)"
+        }
+      }
+    },
+    "lambda": {
+      "type": "object",
+      "description": "Lambda function configuration",
+      "required": ["runtime", "handler"],
+      "properties": {
+        "runtime": {
+          "type": "string",
+          "description": "Lambda runtime",
+          "enum": ["nodejs18.x", "nodejs20.x"]
+        },
+        "handler": {
+          "type": "string",
+          "description": "Lambda handler path (relative to ZIP root)",
+          "examples": ["dist/lambda.handler", "src/lambda.handler"]
+        },
+        "memorySize": {
+          "type": "number",
+          "description": "Lambda memory size in MB",
+          "minimum": 128,
+          "maximum": 10240,
+          "default": 512
+        },
+        "timeout": {
+          "type": "number",
+          "description": "Lambda timeout in seconds",
+          "minimum": 1,
+          "maximum": 900,
+          "default": 30
+        },
+        "layers": {
+          "type": "array",
+          "description": "Lambda layer ARNs",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        }
+      }
+    },
+    },
+    "apiGateway": {
+      "type": "object",
+      "description": "API Gateway configuration",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable API Gateway for this environment"
+        },
+        "stageName": {
+          "type": "string",
+          "default": "dev",
+          "description": "Stage name for deployment"
+        },
+        "description": {
+          "type": "string",
+          "default": "",
+          "description": "API Gateway description"
+        }
+      }
+    },
+    "environments": {
+      "type": "object",
+      "description": "Environment-specific configurations",
+      "patternProperties": {
+        "^[a-z0-9_]+$": {
+          "type": "object",
+          "required": ["functionName", "roleArn", "configFile"],
+          "properties": {
+            "extends": {
+              "type": "string",
+              "description": "Parent environment to inherit from"
+            },
+            "functionName": {
+              "type": "string",
+              "description": "Lambda function name for this environment"
+            },
+            "roleArn": {
+              "type": "string",
+              "description": "IAM role ARN for Lambda execution"
+            },
+            "memorySize": {
+              "type": "number",
+              "description": "Override memory size (defaults to lambda.memorySize)"
+            },
+            "timeout": {
+              "type": "number",
+              "description": "Override timeout (defaults to lambda.timeout)"
+            },
+            "configFile": {
+              "type": "string",
+              "description": "Path to environment variables JSON file"
+            }
+          }
+        }
+      }
+    }
+  }
+}
